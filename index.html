@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G NR ARFCN Converter</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 16px;
+        }
+
+        main {
+            width: min(1080px, 100%);
+            background: #ffffff;
+            border: 1px solid #e5e5e5;
+            border-radius: 20px;
+            box-shadow: 0 36px 90px rgba(12, 30, 68, 0.08);
+            padding: clamp(24px, 4vw, 40px);
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(1.9rem, 4vw, 2.6rem);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #0b172a;
+            font-weight: 700;
+        }
+
+        p {
+            margin: 0 0 20px;
+            color: #2d3748;
+            line-height: 1.6;
+            font-size: 1.02rem;
+        }
+
+        a {
+            color: #0b4aa9;
+            text-decoration: none;
+        }
+
+        a:hover,
+        a:focus {
+            text-decoration: underline;
+        }
+
+        section {
+            border: 1px solid #efefef;
+            border-radius: 16px;
+            padding: 24px;
+            background: #fdfdfd;
+            margin-bottom: 24px;
+        }
+
+        section:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .reference h2 {
+            margin: 0 0 12px;
+            font-size: 1.15rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .formula {
+            margin: 12px 0;
+            padding: 12px 16px;
+            background: #f1f5fb;
+            border-radius: 10px;
+            font-family: "Fira Mono", "Source Code Pro", Consolas, monospace;
+            font-size: 0.95rem;
+        }
+
+        .note {
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.87rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #cfd4db;
+            background: #fff;
+            color: #0f172a;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-sizing: border-box;
+            font-weight: 600;
+        }
+
+        select:focus,
+        input:focus {
+            outline: none;
+            border-color: #164ab9;
+            box-shadow: 0 0 0 3px rgba(22, 74, 185, 0.18);
+        }
+
+        .band-picker {
+            display: grid;
+            gap: 14px;
+        }
+
+        .band-meta {
+            font-size: 0.95rem;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .panel-grid {
+            display: grid;
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .panel {
+            border: 1px solid #e4e8ee;
+            border-radius: 14px;
+            padding: 20px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-sizing: border-box;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .panel-header label {
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        .panel select {
+            flex: 1;
+        }
+
+        .swap-button {
+            border: none;
+            background: #0a5cce;
+            color: #fff;
+            font-size: 1.25rem;
+            border-radius: 12px;
+            padding: 14px 18px;
+            cursor: pointer;
+            align-self: center;
+            box-shadow: 0 6px 20px rgba(10, 92, 206, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .swap-button:hover,
+        .swap-button:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(10, 92, 206, 0.35);
+        }
+
+        .swap-button:active {
+            transform: translateY(1px);
+        }
+
+        .input-hint {
+            font-size: 0.88rem;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .output {
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #dde2eb;
+            background: #f5f8fc;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 120px;
+            justify-content: center;
+        }
+
+        .output .primary {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .output .meta {
+            font-size: 0.9rem;
+            color: #1f2937;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 600;
+        }
+
+        .output .meta.heading {
+            margin-top: 6px;
+            font-size: 0.92rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .band-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .band-item {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: baseline;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #d9deea;
+            background: #fff;
+        }
+
+        .band-tag {
+            background: #0b4aa9;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .band-attr {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .band-domain {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #0f2c67;
+        }
+
+        .band-range {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .band-note {
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .output.muted {
+            background: #f9fafc;
+            color: #475569;
+            border-color: #eceff4;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 500;
+        }
+
+        .output.error {
+            background: #fff4f4;
+            color: #c52727;
+            border-color: #f0b1b1;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 600;
+        }
+
+        .primary-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .copy-button {
+            border: none;
+            background: #0b4aa9;
+            color: #fff;
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .copy-button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .copy-button:not(:disabled):hover,
+        .copy-button:not(:disabled):focus {
+            transform: translateY(-1px);
+        }
+
+        .copy-status {
+            font-size: 0.82rem;
+            color: #0b4aa9;
+            min-height: 1em;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        @media (min-width: 768px) {
+            .panel-grid {
+                grid-template-columns: 1fr auto 1fr;
+            }
+
+            .panel {
+                min-height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>5G NR ARFCN Converter</h1>
+            <p>Enter an NR-ARFCN or a centre frequency and pick the direction.
+                The converter derives the opposite value using the global NR raster from 3GPP TS 38.104 and lists every NR band,
+                FR range, and duplex mode that contains the resulting frequency.</p>
+        </header>
+
+        <section class="translator">
+            <div class="panel-grid">
+                <div class="panel panel-source">
+                    <div class="panel-header">
+                        <label for="source-mode">From</label>
+                        <select id="source-mode">
+                            <option value="arfcn">NR-ARFCN</option>
+                            <option value="mhz">Frequency (MHz)</option>
+                        </select>
+                    </div>
+                    <input id="source-input" type="number" placeholder="e.g. 640000" inputmode="decimal">
+                    <div id="source-hint" class="input-hint">Enter integer NR-ARFCN values between 0 and 3279165.</div>
+                </div>
+
+                <button id="swap-button" type="button" class="swap-button" aria-label="Swap conversion direction">⇆</button>
+
+                <div class="panel panel-target">
+                    <div class="panel-header">
+                        <label for="target-mode">To</label>
+                        <select id="target-mode">
+                            <option value="mhz">Frequency (MHz)</option>
+                            <option value="arfcn">NR-ARFCN</option>
+                        </select>
+                    </div>
+                    <div id="target-output" class="output muted">
+                        Enter a value to convert.
+                        <div id="copy-status" class="copy-status" aria-live="polite"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="reference">
+            <h2>3GPP References</h2>
+            <p>Band limits align with <a href="https://www.etsi.org/deliver/etsi_ts/138100_138199/138104/18.08.00_60/ts_138104v180800p.pdf"
+                    target="_blank" rel="noopener">3GPP TS 38.104 v18.8.0</a> Table 5.2-1 (FR1 bands) and Table 5.2-2
+                (FR2 bands). The NR-ARFCN mapping follows Table 5.4.2.1-1.</p>
+            <div class="formula">F<sub>REF</sub> = F<sub>REF-OFFS</sub> + &Delta;F<sub>Global</sub> * (N<sub>REF</sub> - N<sub>REF-OFFS</sub>)</div>
+            <p class="note">&Delta;F<sub>Global</sub> = 0.005 MHz for 0-3000 MHz, 0.015 MHz for 3000-24250 MHz, and 0.06 MHz for
+                24250-100000 MHz (TS 38.104 Table 5.4.2.1-1).</p>
+        </section>
+    </main>
+
+    <script>
+        const GLOBAL_RASTER = [
+            { min: 0, max: 599999, deltaKhz: 5, fRefOffs: 0, nRefOffs: 0 },
+            { min: 600000, max: 2016666, deltaKhz: 15, fRefOffs: 3000, nRefOffs: 600000 },
+            { min: 2016667, max: 3279165, deltaKhz: 60, fRefOffs: 24250.08, nRefOffs: 2016667 }
+        ];
+
+        GLOBAL_RASTER.forEach((raster) => {
+            const stepMhz = raster.deltaKhz / 1000;
+            raster.freqMin = raster.fRefOffs + stepMhz * (raster.min - raster.nRefOffs);
+            raster.freqMax = raster.fRefOffs + stepMhz * (raster.max - raster.nRefOffs);
+        });
+
+        const nrBands = [
+            { id: 'n1', fr: 'FR1', duplex: 'FDD', uplink: { low: 1920.0, high: 1980.0 }, downlink: { low: 2110.0, high: 2170.0 } },
+            { id: 'n2', fr: 'FR1', duplex: 'FDD', uplink: { low: 1850.0, high: 1910.0 }, downlink: { low: 1930.0, high: 1990.0 } },
+            { id: 'n3', fr: 'FR1', duplex: 'FDD', uplink: { low: 1710.0, high: 1785.0 }, downlink: { low: 1805.0, high: 1880.0 } },
+            { id: 'n5', fr: 'FR1', duplex: 'FDD', uplink: { low: 824.0, high: 849.0 }, downlink: { low: 869.0, high: 894.0 } },
+            { id: 'n7', fr: 'FR1', duplex: 'FDD', uplink: { low: 2500.0, high: 2570.0 }, downlink: { low: 2620.0, high: 2690.0 } },
+            { id: 'n8', fr: 'FR1', duplex: 'FDD', uplink: { low: 880.0, high: 915.0 }, downlink: { low: 925.0, high: 960.0 } },
+            { id: 'n12', fr: 'FR1', duplex: 'FDD', uplink: { low: 699.0, high: 716.0 }, downlink: { low: 729.0, high: 746.0 } },
+            { id: 'n13', fr: 'FR1', duplex: 'FDD', uplink: { low: 777.0, high: 787.0 }, downlink: { low: 746.0, high: 756.0 } },
+            { id: 'n14', fr: 'FR1', duplex: 'FDD', uplink: { low: 788.0, high: 798.0 }, downlink: { low: 758.0, high: 768.0 } },
+            { id: 'n18', fr: 'FR1', duplex: 'FDD', uplink: { low: 815.0, high: 830.0 }, downlink: { low: 860.0, high: 875.0 } },
+            { id: 'n20', fr: 'FR1', duplex: 'FDD', uplink: { low: 832.0, high: 862.0 }, downlink: { low: 791.0, high: 821.0 } },
+            { id: 'n24', fr: 'FR1', duplex: 'FDD', uplink: { low: 1626.5, high: 1660.5 }, downlink: { low: 1525.0, high: 1559.0 }, notes: 'Note 7' },
+            { id: 'n25', fr: 'FR1', duplex: 'FDD', uplink: { low: 1850.0, high: 1915.0 }, downlink: { low: 1930.0, high: 1995.0 } },
+            { id: 'n26', fr: 'FR1', duplex: 'FDD', uplink: { low: 814.0, high: 849.0 }, downlink: { low: 859.0, high: 894.0 } },
+            { id: 'n28', fr: 'FR1', duplex: 'FDD', uplink: { low: 703.0, high: 748.0 }, downlink: { low: 758.0, high: 803.0 } },
+            { id: 'n29', fr: 'FR1', duplex: 'SDL', uplink: null, downlink: { low: 717.0, high: 728.0 } },
+            { id: 'n30', fr: 'FR1', duplex: 'FDD', uplink: { low: 2305.0, high: 2315.0 }, downlink: { low: 2350.0, high: 2360.0 } },
+            { id: 'n31', fr: 'FR1', duplex: 'FDD', uplink: { low: 452.5, high: 457.5 }, downlink: { low: 462.5, high: 467.5 } },
+            { id: 'n34', fr: 'FR1', duplex: 'TDD', uplink: { low: 2010.0, high: 2025.0 }, downlink: { low: 2010.0, high: 2025.0 } },
+            { id: 'n38', fr: 'FR1', duplex: 'TDD', uplink: { low: 2570.0, high: 2620.0 }, downlink: { low: 2570.0, high: 2620.0 } },
+            { id: 'n39', fr: 'FR1', duplex: 'TDD', uplink: { low: 1880.0, high: 1920.0 }, downlink: { low: 1880.0, high: 1920.0 } },
+            { id: 'n40', fr: 'FR1', duplex: 'TDD', uplink: { low: 2300.0, high: 2400.0 }, downlink: { low: 2300.0, high: 2400.0 } },
+            { id: 'n41', fr: 'FR1', duplex: 'TDD', uplink: { low: 2496.0, high: 2690.0 }, downlink: { low: 2496.0, high: 2690.0 } },
+            { id: 'n46', fr: 'FR1', duplex: 'TDD', uplink: { low: 5150.0, high: 5925.0 }, downlink: { low: 5150.0, high: 5925.0 }, notes: 'Note 3' },
+            { id: 'n48', fr: 'FR1', duplex: 'TDD', uplink: { low: 3550.0, high: 3700.0 }, downlink: { low: 3550.0, high: 3700.0 } },
+            { id: 'n50', fr: 'FR1', duplex: 'TDD', uplink: { low: 1432.0, high: 1517.0 }, downlink: { low: 1432.0, high: 1517.0 } },
+            { id: 'n51', fr: 'FR1', duplex: 'TDD', uplink: { low: 1427.0, high: 1432.0 }, downlink: { low: 1427.0, high: 1432.0 } },
+            { id: 'n53', fr: 'FR1', duplex: 'TDD', uplink: { low: 2483.5, high: 2495.0 }, downlink: { low: 2483.5, high: 2495.0 } },
+            { id: 'n54', fr: 'FR1', duplex: 'TDD', uplink: { low: 1670.0, high: 1675.0 }, downlink: { low: 1670.0, high: 1675.0 } },
+            { id: 'n65', fr: 'FR1', duplex: 'FDD', uplink: { low: 1920.0, high: 2010.0 }, downlink: { low: 2110.0, high: 2200.0 } },
+            { id: 'n66', fr: 'FR1', duplex: 'FDD', uplink: { low: 1710.0, high: 1780.0 }, downlink: { low: 2110.0, high: 2200.0 } },
+            { id: 'n67', fr: 'FR1', duplex: 'SDL', uplink: null, downlink: { low: 738.0, high: 758.0 } },
+            { id: 'n70', fr: 'FR1', duplex: 'FDD', uplink: { low: 1695.0, high: 1710.0 }, downlink: { low: 1995.0, high: 2020.0 } },
+            { id: 'n71', fr: 'FR1', duplex: 'FDD', uplink: { low: 663.0, high: 698.0 }, downlink: { low: 617.0, high: 652.0 } },
+            { id: 'n72', fr: 'FR1', duplex: 'FDD', uplink: { low: 451.0, high: 456.0 }, downlink: { low: 461.0, high: 466.0 } },
+            { id: 'n74', fr: 'FR1', duplex: 'FDD', uplink: { low: 1427.0, high: 1470.0 }, downlink: { low: 1475.0, high: 1518.0 } },
+            { id: 'n75', fr: 'FR1', duplex: 'SDL', uplink: null, downlink: { low: 1432.0, high: 1517.0 } },
+            { id: 'n76', fr: 'FR1', duplex: 'SDL', uplink: null, downlink: { low: 1427.0, high: 1432.0 } },
+            { id: 'n77', fr: 'FR1', duplex: 'TDD', uplink: { low: 3300.0, high: 4200.0 }, downlink: { low: 3300.0, high: 4200.0 }, notes: 'Note 11' },
+            { id: 'n78', fr: 'FR1', duplex: 'TDD', uplink: { low: 3300.0, high: 3800.0 }, downlink: { low: 3300.0, high: 3800.0 } },
+            { id: 'n79', fr: 'FR1', duplex: 'TDD', uplink: { low: 4400.0, high: 5000.0 }, downlink: { low: 4400.0, high: 5000.0 } },
+            { id: 'n80', fr: 'FR1', duplex: 'SUL', uplink: { low: 1710.0, high: 1785.0 }, downlink: null },
+            { id: 'n81', fr: 'FR1', duplex: 'SUL', uplink: { low: 880.0, high: 915.0 }, downlink: null },
+            { id: 'n82', fr: 'FR1', duplex: 'SUL', uplink: { low: 832.0, high: 862.0 }, downlink: null },
+            { id: 'n83', fr: 'FR1', duplex: 'SUL', uplink: { low: 703.0, high: 748.0 }, downlink: null },
+            { id: 'n84', fr: 'FR1', duplex: 'SUL', uplink: { low: 1920.0, high: 1980.0 }, downlink: null },
+            { id: 'n85', fr: 'FR1', duplex: 'FDD', uplink: { low: 698.0, high: 716.0 }, downlink: { low: 728.0, high: 746.0 } },
+            { id: 'n86', fr: 'FR1', duplex: 'SUL', uplink: { low: 1710.0, high: 1780.0 }, downlink: null },
+            { id: 'n89', fr: 'FR1', duplex: 'SUL', uplink: { low: 824.0, high: 849.0 }, downlink: null },
+            { id: 'n90', fr: 'FR1', duplex: 'TDD', uplink: { low: 2496.0, high: 2690.0 }, downlink: { low: 2496.0, high: 2690.0 } },
+            { id: 'n91', fr: 'FR1', duplex: 'FDD', uplink: { low: 832.0, high: 862.0 }, downlink: { low: 1427.0, high: 1432.0 }, notes: 'Note 2' },
+            { id: 'n92', fr: 'FR1', duplex: 'FDD', uplink: { low: 832.0, high: 862.0 }, downlink: { low: 1432.0, high: 1517.0 }, notes: 'Note 2' },
+            { id: 'n93', fr: 'FR1', duplex: 'FDD', uplink: { low: 880.0, high: 915.0 }, downlink: { low: 1427.0, high: 1432.0 }, notes: 'Note 2' },
+            { id: 'n94', fr: 'FR1', duplex: 'FDD', uplink: { low: 880.0, high: 915.0 }, downlink: { low: 1432.0, high: 1517.0 }, notes: 'Note 2' },
+            { id: 'n95', fr: 'FR1', duplex: 'SUL', uplink: { low: 2010.0, high: 2025.0 }, downlink: null, notes: 'Note 1' },
+            { id: 'n96', fr: 'FR1', duplex: 'TDD', uplink: { low: 5925.0, high: 7125.0 }, downlink: { low: 5925.0, high: 7125.0 }, notes: 'Note 3' },
+            { id: 'n97', fr: 'FR1', duplex: 'SUL', uplink: { low: 2300.0, high: 2400.0 }, downlink: null, notes: 'Note 5' },
+            { id: 'n98', fr: 'FR1', duplex: 'SUL', uplink: { low: 1880.0, high: 1920.0 }, downlink: null, notes: 'Note 5' },
+            { id: 'n99', fr: 'FR1', duplex: 'SUL', uplink: { low: 1626.5, high: 1660.5 }, downlink: null, notes: 'Note 6' },
+            { id: 'n100', fr: 'FR1', duplex: 'FDD', uplink: { low: 874.4, high: 880.0 }, downlink: { low: 919.4, high: 925.0 }, notes: 'Note 10' },
+            { id: 'n101', fr: 'FR1', duplex: 'TDD', uplink: { low: 1900.0, high: 1910.0 }, downlink: { low: 1900.0, high: 1910.0 }, notes: 'Note 10' },
+            { id: 'n102', fr: 'FR1', duplex: 'TDD', uplink: { low: 5925.0, high: 6425.0 }, downlink: { low: 5925.0, high: 6425.0 }, notes: 'Note 3' },
+            { id: 'n104', fr: 'FR1', duplex: 'TDD', uplink: { low: 6425.0, high: 7125.0 }, downlink: { low: 6425.0, high: 7125.0 }, notes: 'Note 8' },
+            { id: 'n105', fr: 'FR1', duplex: 'FDD', uplink: { low: 663.0, high: 703.0 }, downlink: { low: 612.0, high: 652.0 } },
+            { id: 'n106', fr: 'FR1', duplex: 'FDD', uplink: { low: 896.0, high: 901.0 }, downlink: { low: 935.0, high: 940.0 } },
+            { id: 'n109', fr: 'FR1', duplex: 'FDD', uplink: { low: 703.0, high: 733.0 }, downlink: { low: 1432.0, high: 1517.0 }, notes: 'Note 2' },
+            { id: 'n257', fr: 'FR2', duplex: 'TDD', uplink: { low: 26500.0, high: 29500.0 }, downlink: { low: 26500.0, high: 29500.0 } },
+            { id: 'n258', fr: 'FR2', duplex: 'TDD', uplink: { low: 24250.0, high: 27500.0 }, downlink: { low: 24250.0, high: 27500.0 } },
+            { id: 'n259', fr: 'FR2', duplex: 'TDD', uplink: { low: 39500.0, high: 43500.0 }, downlink: { low: 39500.0, high: 43500.0 } },
+            { id: 'n260', fr: 'FR2', duplex: 'TDD', uplink: { low: 37000.0, high: 40000.0 }, downlink: { low: 37000.0, high: 40000.0 } },
+            { id: 'n261', fr: 'FR2', duplex: 'TDD', uplink: { low: 27500.0, high: 28350.0 }, downlink: { low: 27500.0, high: 28350.0 } },
+            { id: 'n262', fr: 'FR2', duplex: 'TDD', uplink: { low: 47200.0, high: 48200.0 }, downlink: { low: 47200.0, high: 48200.0 } },
+            { id: 'n263', fr: 'FR2', duplex: 'TDD', uplink: { low: 57000.0, high: 71000.0 }, downlink: { low: 57000.0, high: 71000.0 } }
+        ];
+
+        const sourceModeSelect = document.getElementById("source-mode");
+        const targetModeSelect = document.getElementById("target-mode");
+        const sourceInput = document.getElementById("source-input");
+        const sourceHint = document.getElementById("source-hint");
+        const swapButton = document.getElementById("swap-button");
+        const targetOutput = document.getElementById("target-output");
+        const copyStatus = document.getElementById("copy-status");
+
+        const FR_LABELS = {
+            FR1: "FR1 (410-7125 MHz)",
+            FR2: "FR2 (24.25-71 GHz)"
+        };
+
+        let lastCopyValue = "";
+        let lastSuccess = null;
+
+        function formatBound(value) {
+            if (Number.isInteger(value)) {
+                return value.toString();
+            }
+            return value.toFixed(1).replace(/\.0$/, "");
+        }
+
+        function formatFrequency(value) {
+            return value.toFixed(3).replace(/\.?0+$/, "");
+        }
+
+        function formatRange(range) {
+            if (!range) {
+                return "";
+            }
+            return `${formatBound(range.low)}-${formatBound(range.high)} MHz`;
+        }
+
+        function describeBand(band) {
+            const base = `${band.id} - ${band.fr} - ${band.duplex}`;
+            let rangeText = "";
+            if (band.duplex === "TDD" && band.downlink) {
+                rangeText = `TDD ${formatRange(band.downlink)}`;
+            } else if (band.duplex === "SDL" && band.downlink) {
+                rangeText = `Supplemental DL ${formatRange(band.downlink)}`;
+            } else if (band.duplex === "SUL" && band.uplink) {
+                rangeText = `Supplemental UL ${formatRange(band.uplink)}`;
+            } else {
+                const parts = [];
+                if (band.downlink) {
+                    parts.push(`DL ${formatRange(band.downlink)}`);
+                }
+                if (band.uplink) {
+                    parts.push(`UL ${formatRange(band.uplink)}`);
+                }
+                rangeText = parts.join(" | ");
+            }
+            const noteText = band.notes ? ` (${band.notes})` : "";
+            return `${base} - ${rangeText}${noteText}`;
+        }
+
+        function collectBandMatches(frequency) {
+            const matches = [];
+            nrBands.forEach((band) => {
+                const base = {
+                    bandId: band.id,
+                    fr: FR_LABELS[band.fr] || band.fr,
+                    duplex: band.duplex,
+                    notes: band.notes || ""
+                };
+                const addMatch = (label, range, domain) => {
+                    matches.push({
+                        ...base,
+                        label,
+                        range,
+                        domain
+                    });
+                };
+
+                if (band.duplex === "TDD") {
+                    if (frequencyWithin(band.downlink, frequency)) {
+                        addMatch("TDD (UL/DL)", band.downlink, "tdd");
+                    }
+                } else if (band.duplex === "FDD") {
+                    if (frequencyWithin(band.downlink, frequency)) {
+                        addMatch("Downlink", band.downlink, "downlink");
+                    }
+                    if (frequencyWithin(band.uplink, frequency)) {
+                        addMatch("Uplink", band.uplink, "uplink");
+                    }
+                } else if (band.duplex === "SDL") {
+                    if (frequencyWithin(band.downlink, frequency)) {
+                        addMatch("Supplemental DL", band.downlink, "downlink");
+                    }
+                } else if (band.duplex === "SUL") {
+                    if (frequencyWithin(band.uplink, frequency)) {
+                        addMatch("Supplemental UL", band.uplink, "uplink");
+                    }
+                }
+            });
+            return matches;
+        }
+
+        function findRasterByArfcn(arfcn) {
+            return GLOBAL_RASTER.find((raster) => arfcn >= raster.min && arfcn <= raster.max);
+        }
+
+        function findRasterByFrequency(frequency) {
+            return GLOBAL_RASTER.find((raster) => frequency >= raster.freqMin - 1e-6 && frequency <= raster.freqMax + 1e-6);
+        }
+
+        function frequencyFromArfcn(arfcnValue) {
+            const arfcn = Number(arfcnValue);
+            if (!Number.isInteger(arfcn)) {
+                return { error: "NR-ARFCN must be an integer value." };
+            }
+            if (arfcn < 0 || arfcn > 3279165) {
+                return { error: "NR-ARFCN must be within 0-3279165 (global raster range)." };
+            }
+            const raster = findRasterByArfcn(arfcn);
+            if (!raster) {
+                return { error: "NR-ARFCN does not map to a defined raster segment." };
+            }
+            const stepMhz = raster.deltaKhz / 1000;
+            const frequency = raster.fRefOffs + stepMhz * (arfcn - raster.nRefOffs);
+            return { frequency, raster };
+        }
+
+        function arfcnFromFrequency(frequencyValue) {
+            const frequency = Number(frequencyValue);
+            if (!Number.isFinite(frequency)) {
+                return { error: "Frequency must be a numeric value." };
+            }
+            const raster = findRasterByFrequency(frequency);
+            if (!raster) {
+                return { error: "Frequency lies outside the global NR raster (0-100000 MHz)." };
+            }
+            const stepMhz = raster.deltaKhz / 1000;
+            const normalized = (frequency - raster.fRefOffs) / stepMhz + raster.nRefOffs;
+            const candidate = Math.round(normalized);
+            if (candidate < raster.min || candidate > raster.max) {
+                return { error: "Frequency maps to an NR-ARFCN outside the permitted range." };
+            }
+            const reconstructed = raster.fRefOffs + stepMhz * (candidate - raster.nRefOffs);
+            if (Math.abs(reconstructed - frequency) > stepMhz / 2 + 1e-6) {
+                return {
+                    error: `Frequency does not align with the ${raster.deltaKhz} kHz raster step (Delta=${Math.abs(reconstructed - frequency).toFixed(6)} MHz).`
+                };
+            }
+            return { arfcn: candidate, raster };
+        }
+
+        function frequencyWithin(range, frequency) {
+            if (!range) {
+                return false;
+            }
+            return frequency >= range.low - 1e-6 && frequency <= range.high + 1e-6;
+        }
+
+        function convertArfcnToFrequency(arfcnValue) {
+            const base = frequencyFromArfcn(arfcnValue);
+            if (base.error) {
+                return base;
+            }
+            return {
+                frequency: base.frequency,
+                raster: base.raster,
+                matches: collectBandMatches(base.frequency)
+            };
+        }
+
+        function convertFrequencyToArfcn(frequencyValue) {
+            const frequency = Number(frequencyValue);
+            if (!Number.isFinite(frequency)) {
+                return { error: "Frequency must be a numeric value." };
+            }
+            const arfcnInfo = arfcnFromFrequency(frequency);
+            if (arfcnInfo.error) {
+                return arfcnInfo;
+            }
+            return {
+                matches: collectBandMatches(frequency),
+                frequency,
+                arfcn: arfcnInfo.arfcn,
+                raster: arfcnInfo.raster
+            };
+        }
+
+        function ensureDistinctModes(changed) {
+            if (sourceModeSelect.value === targetModeSelect.value) {
+                if (changed === "source") {
+                    targetModeSelect.value = sourceModeSelect.value === "arfcn" ? "mhz" : "arfcn";
+                } else if (changed === "target") {
+                    sourceModeSelect.value = targetModeSelect.value === "arfcn" ? "mhz" : "arfcn";
+                } else {
+                    targetModeSelect.value = sourceModeSelect.value === "arfcn" ? "mhz" : "arfcn";
+                }
+            }
+        }
+
+        function updateSourceInputAttributes() {
+            const mode = sourceModeSelect.value;
+            if (mode === "arfcn") {
+                sourceInput.placeholder = "e.g. 640000";
+                sourceInput.step = "1";
+                sourceInput.min = "0";
+                sourceInput.max = "3279165";
+                sourceHint.textContent = "Enter integer NR-ARFCN values between 0 and 3279165.";
+            } else {
+                sourceInput.placeholder = "e.g. 3500";
+                sourceInput.step = "0.001";
+                sourceInput.removeAttribute("min");
+                sourceInput.removeAttribute("max");
+                sourceHint.textContent = "Enter RF reference frequency in MHz within the selected band.";
+            }
+        }
+
+        function setMutedOutput(text) {
+            targetOutput.className = "output muted";
+            targetOutput.innerHTML = `<div>${text}</div>`;
+            updateCopyState("");
+            copyStatus.textContent = "";
+        }
+
+        function setErrorOutput(text) {
+            targetOutput.className = "output error";
+            targetOutput.innerHTML = `<div>${text}</div>`;
+            updateCopyState("");
+            copyStatus.textContent = "";
+        }
+
+        function setSuccessOutput(lines, copyValue, resultValue, targetMode) {
+            targetOutput.className = "output";
+            targetOutput.innerHTML = lines.join("");
+            copyStatus.textContent = "";
+            const button = targetOutput.querySelector(".copy-button");
+            if (button) {
+                button.disabled = !copyValue;
+                button.addEventListener("click", async () => {
+                    if (!copyValue) {
+                        return;
+                    }
+                    try {
+                        await navigator.clipboard.writeText(copyValue);
+                        copyStatus.textContent = "Value copied to clipboard.";
+                    } catch (error) {
+                        copyStatus.textContent = "Clipboard copy failed.";
+                    }
+                });
+            }
+            updateCopyState(copyValue, resultValue, targetMode);
+        }
+
+        function updateCopyState(value, resultValue = null, targetMode = null) {
+            lastCopyValue = value;
+            const button = targetOutput.querySelector(".copy-button");
+            if (button) {
+                button.disabled = !value;
+            }
+            if (!value) {
+                lastSuccess = null;
+            } else {
+                lastSuccess = {
+                    targetMode,
+                    resultValue
+                };
+            }
+        }
+
+        function renderConversion() {
+            copyStatus.textContent = "";
+            const sourceMode = sourceModeSelect.value;
+            const targetMode = targetModeSelect.value;
+            const rawValue = sourceInput.value.trim();
+
+            if (!rawValue) {
+                const placeholder = sourceMode === "arfcn" ? "Enter an NR-ARFCN to convert." : "Enter a frequency in MHz to convert.";
+                setMutedOutput(placeholder);
+                return;
+            }
+
+            const value = Number(rawValue);
+            if (!Number.isFinite(value)) {
+                setErrorOutput("Input must be a numeric value.");
+                return;
+            }
+
+            if (sourceMode === targetMode) {
+                setErrorOutput("Choose different units for input and output.");
+                return;
+            }
+
+            if (sourceMode === "arfcn" && targetMode === "mhz") {
+                const result = convertArfcnToFrequency(value);
+                if (result.error) {
+                    setErrorOutput(result.error);
+                    return;
+                }
+
+                const primaryFrequency = formatFrequency(result.frequency);
+                const lines = [];
+                lines.push(`<div class="primary-row"><div class="primary">${primaryFrequency} MHz</div><button type="button" class="copy-button">Copy</button></div>`);
+                lines.push(`<div class="meta">NR-ARFCN ${value} resolves via global raster (Delta F = ${result.raster.deltaKhz} kHz)</div>`);
+
+                if (result.matches.length) {
+                    lines.push('<div class="meta heading">Bands containing this frequency:</div>');
+                    const items = result.matches.map((match) => {
+                        const noteText = match.notes ? ` <span class="band-note">${match.notes}</span>` : "";
+                        return `<li class="band-item">
+                            <span class="band-tag">${match.bandId}</span>
+                            <span class="band-attr">${match.fr}</span>
+                            <span class="band-attr">${match.duplex}</span>
+                            <span class="band-domain">${match.label}</span>
+                            <span class="band-range">${formatRange(match.range)}</span>${noteText}
+                        </li>`;
+                    }).join("");
+                    lines.push(`<ul class="band-list">${items}</ul>`);
+                } else {
+                    lines.push('<div class="meta">No defined NR operating band includes this frequency.</div>');
+                }
+
+                const copyValue = primaryFrequency;
+                setSuccessOutput(lines, copyValue, primaryFrequency, "mhz");
+            } else if (sourceMode === "mhz" && targetMode === "arfcn") {
+                const result = convertFrequencyToArfcn(value);
+                if (result.error) {
+                    setErrorOutput(result.error);
+                    return;
+                }
+
+                const lines = [];
+                lines.push(`<div class="primary-row"><div class="primary">NR-ARFCN ${result.arfcn}</div><button type="button" class="copy-button">Copy</button></div>`);
+                lines.push(`<div class="meta">${formatFrequency(result.frequency)} MHz, Delta F = ${result.raster.deltaKhz} kHz (global raster)</div>`);
+
+                if (result.matches.length) {
+                    lines.push('<div class="meta heading">Bands containing this frequency:</div>');
+                    const items = result.matches.map((match) => {
+                        const noteText = match.notes ? ` <span class="band-note">${match.notes}</span>` : "";
+                        return `<li class="band-item">
+                            <span class="band-tag">${match.bandId}</span>
+                            <span class="band-attr">${match.fr}</span>
+                            <span class="band-attr">${match.duplex}</span>
+                            <span class="band-domain">${match.label}</span>
+                            <span class="band-range">${formatRange(match.range)}</span>${noteText}
+                        </li>`;
+                    }).join("");
+                    lines.push(`<ul class="band-list">${items}</ul>`);
+                } else {
+                    lines.push('<div class="meta">No defined NR operating band includes this frequency.</div>');
+                }
+
+                const copyValue = String(result.arfcn);
+                setSuccessOutput(lines, copyValue, String(result.arfcn), "arfcn");
+            } else {
+                setErrorOutput("Unsupported conversion direction.");
+            }
+        }
+
+        function handleSwap() {
+            const prevSourceMode = sourceModeSelect.value;
+            const prevTargetMode = targetModeSelect.value;
+            sourceModeSelect.value = prevTargetMode;
+            targetModeSelect.value = prevSourceMode;
+            ensureDistinctModes();
+            updateSourceInputAttributes();
+            if (lastSuccess && lastSuccess.targetMode === sourceModeSelect.value && lastSuccess.resultValue) {
+                sourceInput.value = lastSuccess.resultValue;
+            } else {
+                sourceInput.value = "";
+            }
+            renderConversion();
+        }
+
+        sourceModeSelect.addEventListener("change", () => {
+            ensureDistinctModes("source");
+            updateSourceInputAttributes();
+            renderConversion();
+        });
+
+        targetModeSelect.addEventListener("change", () => {
+            ensureDistinctModes("target");
+            renderConversion();
+        });
+
+        sourceInput.addEventListener("input", () => {
+            renderConversion();
+        });
+
+        swapButton.addEventListener("click", () => {
+            handleSwap();
+        });
+
+        ensureDistinctModes();
+        updateSourceInputAttributes();
+        renderConversion();
+    </script>
+</body>
+</html>
